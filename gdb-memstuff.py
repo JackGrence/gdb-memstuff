@@ -91,7 +91,7 @@ class MemStuff (gdb.Command):
         self.maps = result
 
     def xinfo(self, arg, from_tty):
-        self.maps_cache('', from_tty)
+        self.maps_cache('cache', from_tty)
         arg = Helper.u64(arg)
         print('xinfo', hex(arg), '...')
         for start, end, *detail in self.maps:
