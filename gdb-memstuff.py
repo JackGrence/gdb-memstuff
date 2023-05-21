@@ -46,6 +46,30 @@ class Helper:
             data = data[0x1000:]
             block_idx += 1
 
+    @classmethod
+    def read_bytes(cls, exp, length):
+        gdb.execute('set print repeat unlimited')
+        gdb.execute('set print elements unlimited')
+        data = gdb.parse_and_eval(f'*{{char []}}({exp})@{length}')
+        result = data.format_string(format='x')
+        result = eval(f'[{result[1:-1]}]')
+        result = bytes(result)
+        gdb.execute('set print elements 200')
+        gdb.execute('set print repeat 10')
+        return result
+
+    @classmethod
+    def read_str(cls, exp):
+        result = b''
+        cur = cls.read_bytes(exp, 256)
+        offset = 256
+        while b'\0' not in cur:
+            result += cur
+            cur = cls.read_bytes(f'((unsigned long){exp})+{offset}', 256)
+            offset += 256
+        result += cur[:cur.index(b'\0')]
+        return result
+
 
 class MemStuff (gdb.Command):
     '''
