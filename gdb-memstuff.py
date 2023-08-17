@@ -87,6 +87,36 @@ class MemStuff (gdb.Command):
             self.xinfo(arg, from_tty)
         elif self.name == 'vmmap':
             self.vmmap(arg, from_tty)
+        elif self.name == 'telescope':
+            self.telescope(arg, from_tty)
+
+    def telescope(self, arg, from_tty):
+        '''telescope address size'''
+        arg = arg.split(' ')
+        arg += [''] * 2
+        address, size = arg[:2]
+        if size == '':
+            size = '10'
+        try:
+            address = Helper.u64(address)
+            size = Helper.u64(size)
+        except Exception:
+            print(f'your input: telescope {address} {size}')
+            print('Usage: telescope address size')
+            return
+        # 64 bit
+        for i in range(size):
+            cur_addr = address + i * 8
+            value = Helper.u64(address + i * 8, deref=True)
+            result = f'{hex(cur_addr)}: {hex(value)} '
+            try:
+                data = gdb.execute(f'x/s {value}', False, True)
+                data = (data.split(':')[1].strip())
+                if data[0] == '"':
+                    result += f'-> {data}'
+            except Exception:
+                '''invalid address'''
+            print(result)
 
     def vmmap(self, arg, from_tty):
         self.maps_cache(arg, from_tty)
@@ -130,3 +160,4 @@ class MemStuff (gdb.Command):
 
 MemStuff("xinfo")
 MemStuff("vmmap")
+MemStuff("telescope")
