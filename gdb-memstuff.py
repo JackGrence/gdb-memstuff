@@ -120,13 +120,17 @@ class MemStuff (gdb.Command):
 
     def vmmap(self, arg, from_tty):
         self.maps_cache(arg, from_tty)
+        result = []
         for start, end, *detail in self.maps:
             detail = f'{detail}'
             if arg:
                 if arg in detail:
                     print(hex(start), hex(end), detail)
+                    if not result:
+                        result = [start, end, detail]
             else:
                 print(hex(start), hex(end), detail)
+        return result
 
     def maps_cache(self, arg, from_tty):
         if self.maps and not arg:
@@ -148,6 +152,7 @@ class MemStuff (gdb.Command):
         self.maps_cache('cache', from_tty)
         arg = Helper.u64(arg)
         print('xinfo', hex(arg), '...')
+        result = []
         for start, end, *detail in self.maps:
             if arg >= start and arg < end:
                 for _s, _e, *_d in self.maps:
@@ -155,7 +160,10 @@ class MemStuff (gdb.Command):
                         print('---')
                         print(hex(_s), hex(_e), _d)
                         print(f'> offset = {hex(arg - _s)}')
+                        if not result:
+                            result += [_s, _e, _d]
                 break
+        return result
 
 
 MemStuff("xinfo")
