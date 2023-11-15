@@ -166,6 +166,25 @@ class MemStuff (gdb.Command):
         return result
 
 
-MemStuff("xinfo")
-MemStuff("vmmap")
-MemStuff("telescope")
+class Mycmd (gdb.Command):
+
+    def __init__(self, name):
+        self.name = name
+        self.maps = []
+        super(Mycmd, self).__init__(name, gdb.COMMAND_USER)
+
+    def invoke(self, arg, from_tty):
+        try:
+            f = getattr(self, self.name)
+            f(arg, from_tty)
+        except:
+            print('command not found')
+
+    def rl(self, arg, from_tty):
+        gdb.execute('source gdb-memstuff.py')
+
+
+MemStuff('xinfo')
+MemStuff('vmmap')
+MemStuff('telescope')
+Mycmd('rl')
