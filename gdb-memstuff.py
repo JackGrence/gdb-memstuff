@@ -136,6 +136,24 @@ class MemStuff (gdb.Command):
         if self.maps and not arg:
             return
         mappings = gdb.execute('i proc mappings', from_tty, True)
+        if 'warning: unable to open /proc file' in mappings:
+            print('adjust the address for qemu user-mode')
+            # please add QEMU_GUEST_BASE=0x20000000 or -B 0x20000000 when running the qemu
+            file = gdb.execute('i files', from_tty, True)
+            file = file.split('\n', 1)[0].strip()
+            file = file.split('"')[1].split('/')[-1]
+            out = subprocess.check_output(f'ps a -o pid,args | grep qemu | grep {file}', shell=True)
+            target_pid = []
+            for proc in out.split(b'\n'):
+                if not proc.strip() or b'grep' in proc:
+                    continue
+                target_pid.append((proc.strip().split(b' ')[0], proc))
+            if len(target_pid) != 1:
+                print(f'multiple target:\n{target_pid}')
+                return
+            target_pid = target_pid[0][0].decode()
+            out = subprocess.check_output(f'cat /proc/{target_pid}/maps', shell=True)
+            mappings = out.decode()
         result = []
         for line in mappings.split('\n'):
             line = line.strip()
@@ -146,6 +164,16 @@ class MemStuff (gdb.Command):
                 buf[0] = int(buf[0], 0)
                 buf[1] = int(buf[1], 0)
                 result.append(buf[:])
+            line = line.split(' ')
+            if len(line) >= 5 and '-' in line[0]:
+                offset = 0x20000000
+                start, end = line[0].split('-')
+                start, end = [int(start, 16), int(end, 16)]
+                if start >= offset:
+                    buf = [start - offset, end - offset]
+                    extra = filter(lambda x: x, line[1:])
+                    buf += list(extra)
+                    result.append(buf[:])
         self.maps = result
 
     def xinfo(self, arg, from_tty):
