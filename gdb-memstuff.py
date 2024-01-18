@@ -13,7 +13,7 @@ class Helper:
         result = gdb.parse_and_eval(exp)
         if deref:
             result = gdb.parse_and_eval(f'*(unsigned int *){result}')
-        return result
+        return int(result)
 
     @classmethod
     def u64(cls, exp, deref=False):
@@ -21,7 +21,7 @@ class Helper:
         result = gdb.parse_and_eval(exp)
         if deref:
             result = gdb.parse_and_eval(f'*(unsigned long *){result}')
-        return result
+        return int(result)
 
     @classmethod
     def write_bytes(cls, exp, data):
