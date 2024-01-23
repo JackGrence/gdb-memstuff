@@ -81,7 +81,7 @@ class Helper:
         bps = [gdb.Breakpoint(f'*{bp}') for bp in hook_list]
         gdb.execute('c')
         while Helper.u64('$pc') in hook_list:
-            for cmd in hook_list[Helper.u32('$pc')]:
+            for cmd in hook_list[Helper.u64('$pc')]:
                 gdb.execute(cmd)
             gdb.execute('c')
         bps = [bp.delete() for bp in bps]
