@@ -70,6 +70,22 @@ class Helper:
         result += cur[:cur.index(b'\0')]
         return result
 
+    @classmethod
+    def hook_run(cls, hook_list):
+        '''
+        hook_list = {
+                0xa38d4: ['set $r0=0'],
+                0x5bed8: ['set $r2=1'],
+                }
+        '''
+        bps = [gdb.Breakpoint(f'*{bp}') for bp in hook_list]
+        gdb.execute('c')
+        while Helper.u64('$pc') in hook_list:
+            for cmd in hook_list[Helper.u32('$pc')]:
+                gdb.execute(cmd)
+            gdb.execute('c')
+        bps = [bp.delete() for bp in bps]
+
 
 class MemStuff (gdb.Command):
     '''
