@@ -4,6 +4,7 @@
 # usage:
 # gdb -x gdb-memstuff.py
 import gdb
+import traceback
 
 
 class Helper:
@@ -221,8 +222,10 @@ class Mycmd (gdb.Command):
         try:
             f = getattr(self, self.name)
             f(arg, from_tty)
-        except:
+        except AttributeError:
             print('command not found')
+        except Exception:
+            traceback.print_exc()
 
     def rl(self, arg, from_tty):
         gdb.execute('source gdb-memstuff.py')
