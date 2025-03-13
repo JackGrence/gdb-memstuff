@@ -202,13 +202,19 @@ class MemStuff (gdb.Command):
             if arg >= start and arg < end:
                 for _s, _e, *_d in self.maps:
                     if _d[-1] == detail[-1]:
-                        print('---')
-                        print(hex(_s), hex(_e), _d)
-                        print(f'> offset = {hex(arg - _s)}')
-                        if not result:
-                            result += [_s, _e, _d]
+                        result.append([_s, _e, _d])
                 break
-        return result
+        if len(result) > 20:
+            for i in range(1, len(result)):
+                _s, _e, _d = result[i]
+                if arg - _s < 0:
+                    result = result[i - 1:i + 1]
+                    break
+        for (_s, _e, _d) in result:
+            print('---')
+            print(hex(_s), hex(_e), _d)
+            print(f'> offset = {hex(arg - _s)}')
+        return result[0]
 
 
 class Mycmd (gdb.Command):
